@@ -5,8 +5,8 @@ import copy
 import logging
 import functools
 from leaguedirector.widgets import userpath
-from PySide2.QtCore import *
-from PySide2.QtNetwork import *
+from PySide6.QtCore import *
+from PySide6.QtNetwork import *
 
 
 class Resource(QObject):
@@ -23,9 +23,9 @@ class Resource(QObject):
     network     = None
 
     def __init__(self):
-        object.__setattr__(self, 'timestamp', time.time())
+        super(Resource, self).__setattr__('timestamp', time.time())
         for name, default in self.fields.items():
-            object.__setattr__(self, name, default)
+            super(Resource, self).__setattr__(name, default)
         QObject.__init__(self)
 
     def __setattr__(self, name, value):
@@ -33,10 +33,10 @@ class Resource(QObject):
             if self.readonly:
                 raise AttributeError("Resource is readonly")
             if getattr(self, name) != value:
-                object.__setattr__(self, name, value)
+                super(Resource, self).__setattr__(name, value)
                 self.update({name: value})
         else:
-            object.__setattr__(self, name, value)
+            super(Resource, self).__setattr__(name, value)
 
     def sslErrors(self, response, errors):
         allowed = [QSslError.CertificateUntrusted, QSslError.HostNameMismatch]
@@ -48,7 +48,9 @@ class Resource(QObject):
             os.environ['PATH'] = os.path.abspath('resources') + os.pathsep + os.environ['PATH']
 
             # Then setup our certificate for the lol game client
-            QSslSocket.addDefaultCaCertificates(os.path.abspath('resources/riotgames.pem'))
+            configuration = QSslConfiguration.defaultConfiguration()
+            configuration.addCaCertificates(QSslCertificate.fromPath(os.path.abspath('resources/riotgames.pem')))
+            QSslConfiguration.setDefaultConfiguration(configuration)
             Resource.network = QNetworkAccessManager(QCoreApplication.instance())
             Resource.network.sslErrors.connect(self.sslErrors)
         return Resource.network
@@ -66,7 +68,7 @@ class Resource(QObject):
         return {name: getattr(self, name) for name in self.fields}
 
     def keys(self):
-        return self.fields.keys()
+        return list(self.fields)
 
     def update(self, data=None):
         request = QNetworkRequest(QUrl(self.host + self.url))
@@ -93,7 +95,7 @@ class Resource(QObject):
         if not self.writeonly:
             for key, value in data.items():
                 if key in self.fields:
-                    object.__setattr__(self, key, value)
+                    super(Resource, self).__setattr__(key, value)
 
 
 class Game(Resource):
@@ -147,6 +149,8 @@ class Render(Resource):
         'interfaceTarget' : True,
         'interfaceQuests' : True,
         'interfaceAnnounce' : True,
+        'interfaceKillCallouts' : True,
+        'interfaceNeutralTimers' : True,
         'healthBarChampions' : True,
         'healthBarStructures' : True,
         'healthBarWards' : True,
@@ -155,6 +159,7 @@ class Render(Resource):
         'environment' : True,
         'characters' : True,
         'particles' : True,
+        'banners' : True,
         'skyboxPath' : '',
         'skyboxRotation' : 0,
         'skyboxRadius' : 0,
@@ -504,7 +509,7 @@ class Sequence(Resource):
         if isinstance(data, dict):
             for key, value in data.items():
                 if value is not None:
-                    object.__setattr__(self, key, value)
+                    super(Resource, self).__setattr__(key, value)
             self.dataLoaded.emit()
 
     def sortData(self):

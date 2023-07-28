@@ -1,3 +1,17 @@
+## 0.1.3
+ - Upgrade to Qt 6
+ - Upgrade to Python 3.10
+ - Upgrade to psutil 5.9.0
+ - Fixes an issue with key bindings when league is the front most window
+ - Fixes an issue searching for league installs
+ - Republish with correct version number
+
+## 0.1.2
+ - Particle filtering window
+ - Depth of field key bindings
+ - Support for toggling visibility of banners, kill callouts and neutral timers
+ - Various bug fixes
+
 ## 0.1.1
 - Fixed visibility options interacting with in game toggles
 - Debug logging is now saved to file (USER)/Documents/LeagueDirector/logs/
